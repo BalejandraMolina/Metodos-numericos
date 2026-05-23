@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metodos Numericos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',monospace;background:#0f0f1a;color:#e0e0f0;min-height:100vh;padding:20px}
+.container{max-width:980px;margin:0 auto}
+h1{text-align:center;font-size:22px;font-weight:600;color:#a89cf7;letter-spacing:4px;text-transform:uppercase;padding:18px 0 4px}
+.subtitle{text-align:center;font-size:11px;color:#555;letter-spacing:2px;margin-bottom:20px}
+
+/* ── TABS PRINCIPALES ── */
+.main-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid #2e2e4e;padding-bottom:0}
+.main-tab{padding:10px 20px;font-size:12px;font-family:'Courier New',monospace;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:#1a1a2e;border:1px solid #2e2e4e;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;color:#888;transition:all .2s}
+.main-tab.active{background:#1e1a3a;border-color:#7f77dd;color:#a89cf7}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── MENU METODOS ── */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px;margin-bottom:18px}
+.menu-btn{background:#1a1a2e;border:1px solid #2e2e4e;border-radius:8px;padding:12px 6px;cursor:pointer;text-align:center;transition:all .2s;color:#e0e0f0}
+.menu-btn:hover{border-color:#7f77dd;background:#1e1e38}
+.menu-btn.active{border:2px solid #7f77dd;background:#1e1a3a}
+.menu-btn .icon{font-size:18px;margin-bottom:5px}
+.menu-btn .lbl{font-size:11px;font-weight:600;color:#c0b8f8;letter-spacing:.5px}
+.menu-btn .sub{font-size:10px;color:#555;margin-top:2px}
+
+/* ── PANEL ── */
+.panel{background:#1a1a2e;border:1px solid #2e2e4e;border-radius:10px;padding:18px;margin-bottom:14px}
+.panel-title{font-size:12px;font-weight:600;color:#a89cf7;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #2e2e4e}
+.input-row{display:grid;gap:9px;margin-bottom:9px}
+.cols-1{grid-template-columns:1fr}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-3{grid-template-columns:1fr 1fr 1fr}
+.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+label{font-size:10px;color:#777;display:block;margin-bottom:3px;letter-spacing:.8px;text-transform:uppercase}
+input[type=text],input[type=number]{width:100%;padding:8px 10px;font-size:12px;font-family:'Courier New',monospace;border-radius:5px;border:1px solid #2e2e4e;background:#0f0f1a;color:#e0e0f0;transition:border-color .15s}
+input:focus{outline:none;border-color:#7f77dd}
+textarea{width:100%;padding:8px 10px;font-size:12px;font-family:'Courier New',monospace;border-radius:5px;border:1px solid #2e2e4e;background:#0f0f1a;color:#e0e0f0;resize:vertical;min-height:60px}
+textarea:focus{outline:none;border-color:#7f77dd}
+
+.hint{font-size:10px;color:#777;padding:7px 10px;background:#131323;border-radius:5px;border-left:3px solid #534ab7;margin:8px 0;line-height:1.7;white-space:pre-line}
+.calc-btn{width:100%;padding:11px;background:#534ab7;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:2px;text-transform:uppercase;margin-top:7px;transition:background .15s;font-family:'Courier New',monospace}
+.calc-btn:hover{background:#3c3489}
+.calc-btn:active{transform:scale(.98)}
+.error{background:#2a1010;border:1px solid #a32d2d;border-radius:5px;padding:9px 12px;font-size:11px;color:#f09595;margin-top:9px;line-height:1.7;white-space:pre-line}
+
+/* ── RESULTADOS ── */
+.result-box{background:#131323;border:1px solid #534ab7;border-radius:7px;padding:14px;text-align:center;margin-bottom:10px}
+.result-val{font-size:26px;font-weight:600;color:#a89cf7;margin-bottom:3px}
+.result-info{font-size:10px;color:#555;letter-spacing:1px}
+.result-sub{font-size:13px;color:#c0b8f8;margin-top:6px}
+.converge{color:#97c459;font-size:11px;text-align:center;margin-bottom:8px}
+.no-converge{color:#f09595;font-size:11px;text-align:center;margin-bottom:8px}
+
+.roots-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-bottom:12px}
+.root-card{background:#131323;border:1px solid #534ab7;border-radius:7px;padding:10px;text-align:center}
+.root-card .rv{font-size:16px;font-weight:600;color:#a89cf7}
+.root-card .ri{font-size:10px;color:#555;margin-top:2px}
+
+.section-label{font-size:10px;color:#a89cf7;letter-spacing:1px;text-transform:uppercase;margin:14px 0 7px;padding-bottom:4px;border-bottom:1px solid #2e2e4e}
+.table-wrap{overflow-x:auto;margin-top:6px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:11px;font-family:'Courier New',monospace}
+th{background:#534ab7;color:#fff;padding:7px 9px;text-align:right;letter-spacing:.4px;font-weight:600;white-space:nowrap}
+th:first-child{text-align:center}
+td{padding:5px 9px;border-bottom:1px solid #1e1e38;text-align:right;color:#c0c0d8}
+td:first-child{text-align:center;color:#555}
+tr:nth-child(even) td{background:#131323}
+tr:last-child td{background:#1a2a1a;color:#97c459;font-weight:600}
+tr:hover td{background:#1e1e38}
+.sign-change td{background:#1a2010!important;color:#c8e870!important}
+
+/* ── GRAFICA ── */
+.graph-controls{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:9px;align-items:end;margin-bottom:12px}
+.graph-btn{padding:9px 16px;background:#534ab7;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Courier New',monospace;letter-spacing:1px;white-space:nowrap}
+.graph-btn:hover{background:#3c3489}
+canvas#myChart{width:100%!important;background:#0f0f1a;border-radius:8px;border:1px solid #2e2e4e}
+
+#results-section{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Metodos Numericos</h1>
+  <p class="subtitle">Calculadora completa — raices · interpolacion · graficacion</p>
+
+  <!-- TABS PRINCIPALES -->
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchTab('raices')">Raices</button>
+    <button class="main-tab" onclick="switchTab('interpolacion')">Interpolacion</button>
+    <button class="main-tab" onclick="switchTab('grafica')">Grafica</button>
+  </div>
+
+  <!-- ══════════ TAB: RAICES ══════════ -->
+  <div id="tab-raices" class="tab-content active">
+    <div class="menu-grid">
+      <button class="menu-btn active" onclick="selectMethod('biseccion')">
+        <div class="icon">⊘</div><div class="lbl">Biseccion</div><div class="sub">[a, b]</div>
+      </button>
+      <button class="menu-btn" onclick="selectMethod('reglafalsa')">
+        <div class="icon">╱</div><div class="lbl">Regla Falsa</div><div class="sub">Regula Falsi</div>
+      </button>
+      <button class="menu-btn" onclick="selectMethod('newton')">
+        <div class="icon">f'</div><div class="lbl">Newton-Raphson</div><div class="sub">f(x) y f'(x)</div>
+      </button>
+      <button class="menu-btn" onclick="selectMethod('secante')">
+        <div class="icon">∿</div><div class="lbl">Secante</div><div class="sub">2 puntos</div>
+      </button>
+      <button class="menu-btn" onclick="selectMethod('raices')">
+        <div class="icon">⟳</div><div class="lbl">Raices</div><div class="sub">Busca en [-5,5]</div>
+      </button>
+      <button class="menu-btn" onclick="selectMethod('muller')">
+        <div class="icon">∩</div><div class="lbl">Muller</div><div class="sub">3 puntos</div>
+      </button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" id="panel-title">Biseccion</div>
+      <div id="method-inputs"></div>
+      <div class="hint" id="hint-text"></div>
+      <button class="calc-btn" onclick="calculate()">Calcular</button>
+      <div id="error-msg"></div>
+    </div>
+
+    <div id="results-section">
+      <div class="panel" id="results-panel"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAB: INTERPOLACION ══════════ -->
+  <div id="tab-interpolacion" class="tab-content">
+
+    <!-- SUB MENU interpolacion -->
+    <div class="menu-grid" style="grid-template-columns:1fr 1fr">
+      <button class="menu-btn active" id="btn-lineal" onclick="selectInterp('lineal')">
+        <div class="icon">╱</div><div class="lbl">Interpolacion Lineal</div><div class="sub">2 puntos conocidos</div>
+      </button>
+      <button class="menu-btn" id="btn-lagrange" onclick="selectInterp('lagrange')">
+        <div class="icon">∑</div><div class="lbl">Interpolacion Lagrange</div><div class="sub">N puntos conocidos</div>
+      </button>
+    </div>
+
+    <!-- LINEAL -->
+    <div id="interp-lineal" class="panel">
+      <div class="panel-title">Interpolacion Lineal</div>
+      <div class="hint">Ingresa los puntos conocidos (uno por linea: x, y) y el valor x a interpolar.
+El programa detecta automaticamente entre que par de puntos cae x y aplica la formula lineal.
+Ejemplo:
+1000, 0.084
+2000, 0.635
+4000, 4.945
+8000, 39.364
+16000, 314.733</div>
+      <div class="input-row cols-1">
+        <div><label>Puntos conocidos (x, y) — uno por linea</label>
+        <textarea id="lin-puntos" rows="5">1000, 0.084
+2000, 0.635
+4000, 4.945
+8000, 39.364
+16000, 314.733</textarea></div>
+      </div>
+      <div class="input-row cols-1">
+        <div><label>x a interpolar</label><input type="number" id="lin-x" value="10000" step="any"></div>
+      </div>
+      <button class="calc-btn" onclick="calcLineal()">Calcular interpolacion lineal</button>
+      <div id="lin-result"></div>
+    </div>
+
+    <!-- LAGRANGE -->
+    <div id="interp-lagrange" class="panel" style="display:none">
+      <div class="panel-title">Interpolacion de Lagrange</div>
+      <div class="hint">Ingresa los puntos conocidos (uno por linea: x,y) y el valor x a interpolar.
+Ejemplo:
+0, 1.787
+5, 1.519
+10, 1.307
+20, 1.002
+30, 0.796</div>
+      <div class="input-row cols-1">
+        <div><label>Puntos conocidos (x, y) — uno por linea</label>
+        <textarea id="lag-puntos" rows="5">0, 1.787
+5, 1.519
+10, 1.307
+20, 1.002
+30, 0.796</textarea></div>
+      </div>
+      <div class="input-row cols-1">
+        <div><label>x a interpolar</label><input type="number" id="lag-x" value="9" step="any"></div>
+      </div>
+      <button class="calc-btn" onclick="calcLagrange()">Calcular interpolacion Lagrange</button>
+      <div id="lag-result"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAB: GRAFICA ══════════ -->
+  <div id="tab-grafica" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">Graficador de funciones</div>
+      <div class="hint">Escribe hasta 3 funciones para graficar. Usa x como variable: x^2-2, x^3-x-2, sin(x)*2, etc.</div>
+      <div class="input-row cols-3">
+        <div><label>f1(x)</label><input type="text" id="g-f1" value="x^2 - 2" placeholder="x^2 - 2"></div>
+        <div><label>f2(x) (opcional)</label><input type="text" id="g-f2" placeholder="x^3 - x - 2"></div>
+        <div><label>f3(x) (opcional)</label><input type="text" id="g-f3" placeholder=""></div>
+      </div>
+      <div class="input-row cols-4">
+        <div><label>x minimo</label><input type="number" id="g-xmin" value="-5" step="any"></div>
+        <div><label>x maximo</label><input type="number" id="g-xmax" value="5" step="any"></div>
+        <div><label>y minimo</label><input type="number" id="g-ymin" value="-10" step="any"></div>
+        <div><label>y maximo</label><input type="number" id="g-ymax" value="10" step="any"></div>
+      </div>
+      <button class="calc-btn" onclick="graficar()">Graficar</button>
+      <div id="g-error" style="margin-top:8px"></div>
+    </div>
+    <div class="panel">
+      <canvas id="myChart" height="400"></canvas>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ══════════ TABS PRINCIPALES ══════════
+function switchTab(t) {
+  ['raices','interpolacion','grafica'].forEach(function(id) {
+    document.getElementById('tab-'+id).classList.toggle('active', id===t);
+  });
+  document.querySelectorAll('.main-tab').forEach(function(b,i){
+    b.classList.toggle('active', ['raices','interpolacion','grafica'][i]===t);
+  });
+  if (t==='grafica' && !window.chartInited) initChart();
+}
+
+// ══════════ METODOS DE RAICES ══════════
+var currentMethod = 'biseccion';
+
+var methods = {
+  biseccion:{
+    title:'Biseccion',
+    hint:'Condicion: f(a) y f(b) deben tener signos opuestos.',
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="x^3-x-2"></div></div><div class="input-row cols-3"><div><label>a</label><input type="number" id="a" value="1" step="any"></div><div><label>b</label><input type="number" id="b" value="2" step="any"></div><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div></div>'
+  },
+  reglafalsa:{
+    title:'Regla Falsa (Regula Falsi)',
+    hint:'Condicion: f(a) y f(b) deben tener signos opuestos (uno + y uno -).',
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="x^2-2"></div></div><div class="input-row cols-3"><div><label>a</label><input type="number" id="a" value="1" step="any"></div><div><label>b</label><input type="number" id="b" value="2" step="any"></div><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div></div>'
+  },
+  newton:{
+    title:'Newton-Raphson',
+    hint:"Ingresa f(x) y su derivada f'(x) manualmente.\nEjemplo: f(x)=x^2-2  →  f'(x)=2*x",
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="x^2-2"></div></div><div class="input-row cols-1"><div><label>f\'(x) derivada</label><input type="text" id="dfx" value="2*x"></div></div><div class="input-row cols-3"><div><label>x0 inicial</label><input type="number" id="x0" value="1.5" step="any"></div><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div><div><label>Max iter</label><input type="number" id="maxiter" value="50"></div></div>'
+  },
+  secante:{
+    title:'Metodo de la Secante',
+    hint:'No requiere derivada. Ingresa dos puntos iniciales cercanos a la raiz.',
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="x^3-x-2"></div></div><div class="input-row cols-3"><div><label>x0</label><input type="number" id="x0" value="1" step="any"></div><div><label>x1</label><input type="number" id="x1" value="2" step="any"></div><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div></div>'
+  },
+  raices:{
+    title:'Raices — Busqueda automatica en [-5, 5]',
+    hint:'Ingresa f(x), f\'(x) y f\'\'(x). Se evalua de -5 a 5, se detectan cambios de signo\ny se generan tablas de iteraciones desde cada punto de la pareja.',
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="2.5*x^2-6.2*x+2.2"></div></div><div class="input-row cols-1"><div><label>f\'(x) — primera derivada</label><input type="text" id="dfx" value="5*x-6.2"></div></div><div class="input-row cols-1"><div><label>f\'\'(x) — segunda derivada</label><input type="text" id="d2fx" value="5"></div></div><div class="input-row cols-2"><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div><div><label>Max iter por raiz</label><input type="number" id="maxiter" value="50"></div></div>'
+  },
+  muller:{
+    title:'Metodo de Muller',
+    hint:'Ajusta una parabola a 3 puntos para aproximar la raiz.',
+    inputs:'<div class="input-row cols-1"><div><label>f(x)</label><input type="text" id="fx" value="x^3-x-2"></div></div><div class="input-row cols-3"><div><label>x0</label><input type="number" id="x0" value="0" step="any"></div><div><label>x1</label><input type="number" id="x1" value="1" step="any"></div><div><label>x2</label><input type="number" id="x2" value="2" step="any"></div></div><div class="input-row cols-2"><div><label>Tolerancia</label><input type="number" id="tol" value="0.0001" step="any"></div><div><label>Max iter</label><input type="number" id="maxiter" value="50"></div></div>'
+  }
+};
+
+function selectMethod(m) {
+  currentMethod=m;
+  var keys=['biseccion','reglafalsa','newton','secante','raices','muller'];
+  document.querySelectorAll('.menu-btn').forEach(function(b,i){b.classList.toggle('active',keys[i]===m)});
+  document.getElementById('panel-title').textContent=methods[m].title;
+  document.getElementById('method-inputs').innerHTML=methods[m].inputs;
+  document.getElementById('hint-text').textContent=methods[m].hint;
+  document.getElementById('error-msg').innerHTML='';
+  document.getElementById('results-section').style.display='none';
+}
+
+function evalF(expr,x){return math.evaluate(expr,{x:x})}
+function showError(msg){document.getElementById('error-msg').innerHTML='<div class="error">ERROR: '+msg+'</div>'}
+
+function fmt(n){
+  if(n===undefined||n===null||(typeof n==='number'&&(isNaN(n)||!isFinite(n))))return 'N/A';
+  return parseFloat(n.toFixed(4)).toFixed(4);
+}
+
+function buildTable(headers,rows){
+  var h=headers.map(function(h){return'<th>'+h+'</th>'}).join('');
+  var r=rows.map(function(row){return'<tr>'+row.map(function(c){return'<td>'+c+'</td>'}).join('')+'</tr>'}).join('');
+  return'<table><thead><tr>'+h+'</tr></thead><tbody>'+r+'</tbody></table>';
+}
+
+function showSingleResult(raiz,iters,converged,table,titulo,extra){
+  var p=document.getElementById('results-panel');
+  p.innerHTML=
+    '<div class="panel-title">Resultado</div>'+
+    '<div class="result-box"><div class="result-val">x = '+parseFloat(raiz.toFixed(4)).toFixed(4)+'</div>'+
+    '<div class="result-info">Iteraciones: '+iters+(extra?'  |  '+extra:'')+'</div></div>'+
+    (converged?'<div class="converge">Convergio correctamente</div>':'<div class="no-converge">No convergio en el limite</div>')+
+    '<div class="section-label">'+(titulo||'Tabla de iteraciones')+'</div>'+
+    '<div class="table-wrap">'+table+'</div>';
+  document.getElementById('results-section').style.display='block';
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth'});
+}
+
+function calculate(){
+  document.getElementById('error-msg').innerHTML='';
+  document.getElementById('results-section').style.display='none';
+  try{
+    if(currentMethod==='biseccion')doBiseccion();
+    else if(currentMethod==='reglafalsa')doReglaFalsa();
+    else if(currentMethod==='newton')doNewton();
+    else if(currentMethod==='secante')doSecante();
+    else if(currentMethod==='raices')doRaices();
+    else if(currentMethod==='muller')doMuller();
+  }catch(e){showError(e.message)}
+}
+
+// ── BISECCION ──
+function doBiseccion(){
+  var expr=document.getElementById('fx').value.trim();
+  var a=parseFloat(document.getElementById('a').value);
+  var b=parseFloat(document.getElementById('b').value);
+  var tol=parseFloat(document.getElementById('tol').value);
+  if(!expr)return showError('Ingresa f(x).');
+  if(isNaN(a)||isNaN(b)||isNaN(tol))return showError('Completa todos los campos.');
+  var fa=evalF(expr,a),fb=evalF(expr,b);
+  if(fa*fb>0)return showError('f(a) y f(b) deben tener signos opuestos.\nf('+a+') = '+fmt(fa)+'\nf('+b+') = '+fmt(fb)+'\nAmbos tienen el mismo signo. Cambia el intervalo.');
+  var rows=[],iter=0,xr=a,converged=false;
+  while(iter<200){
+    iter++;
+    xr=(a+b)/2;
+    var fxr=evalF(expr,xr),ea=(b-a)/2;
+    rows.push([iter,fmt(a),fmt(b),fmt(xr),fmt(fxr),fmt(ea)]);
+    if(ea<tol||Math.abs(fxr)<1e-10){converged=true;break}
+    if(evalF(expr,a)*fxr<0)b=xr;else a=xr;
+  }
+  showSingleResult(xr,iter,converged,buildTable(['n','a','b','xr=(a+b)/2','f(xr)','|(b-a)/2|'],rows));
+}
+
+// REGLA FALSA: columnas i|A|B|F(A)|F(B)|Xi|F(Xi)|T igual que Excel
+function doReglaFalsa(){
+  var expr=document.getElementById('fx').value.trim();
+  var A=parseFloat(document.getElementById('a').value);
+  var B=parseFloat(document.getElementById('b').value);
+  var tol=parseFloat(document.getElementById('tol').value);
+  if(!expr)return showError('Ingresa f(x).');
+  if(isNaN(A)||isNaN(B)||isNaN(tol))return showError('Completa todos los campos.');
+  var fA=evalF(expr,A),fB=evalF(expr,B);
+  if(fA*fB>0)return showError(
+    'F(A) y F(B) deben tener signos opuestos.\n'+
+    'F('+A+') = '+fmt(fA)+'  '+  (fA>0?'POSITIVO':'NEGATIVO')+'\n'+
+    'F('+B+') = '+fmt(fB)+'  '+(fB>0?'POSITIVO':'NEGATIVO')+'\n'+
+    'Ambos son '+(fA>0?'positivos':'negativos')+'. Uno debe ser + y el otro -.\n'+
+    'Para x^2-2: usa A=1, B=2  (F(1)=-1 y F(2)=+2)');
+  var rows=[],iter=0,Xi=A,XiPrev=A,converged=false;
+  while(iter<200){
+    iter++;
+    fA=evalF(expr,A); fB=evalF(expr,B);
+    Xi=(A*fB - B*fA)/(fB - fA);
+    var fXi=evalF(expr,Xi);
+    var T=iter>1 ? fmt(Math.abs(Xi-XiPrev)) : '';
+    rows.push([iter,fmt(A),fmt(B),fmt(fA),fmt(fB),fmt(Xi),fmt(fXi),T]);
+    if(iter>1&&Math.abs(Xi-XiPrev)<tol){converged=true;break}
+    if(fA*fXi<0) B=Xi; else A=Xi;
+    XiPrev=Xi;
+  }
+  showSingleResult(Xi,iter,converged,buildTable(['i','A','B','F(A)','F(B)','Xi','F(Xi)','T'],rows));
+}
+
+// ── NEWTON ──
+function doNewton(){
+  var expr=document.getElementById('fx').value.trim();
+  var dexpr=document.getElementById('dfx').value.trim();
+  var x=parseFloat(document.getElementById('x0').value);
+  var tol=parseFloat(document.getElementById('tol').value);
+  var maxIt=parseInt(document.getElementById('maxiter').value)||50;
+  if(!expr||!dexpr)return showError("Ingresa f(x) y f'(x).");
+  if(isNaN(x)||isNaN(tol))return showError('Completa todos los campos.');
+  var rows=[],iter=0,converged=false;
+  while(iter<maxIt){
+    iter++;
+    var fx=evalF(expr,x),dfx=evalF(dexpr,x);
+    if(Math.abs(dfx)<1e-14)return showError("f'(x)=0: division por cero. Cambia x0.");
+    var xNew=x-fx/dfx,ea=Math.abs(xNew-x);
+    rows.push([iter,fmt(x),fmt(fx),fmt(dfx),fmt(xNew),fmt(ea)]);
+    x=xNew;
+    if(ea<tol){converged=true;break}
+  }
+  showSingleResult(x,iter,converged,buildTable(['n','xn','f(xn)',"f'(xn)",'xn+1','|error|'],rows));
+}
+
+// ── SECANTE ──
+function doSecante(){
+  var expr=document.getElementById('fx').value.trim();
+  var x0=parseFloat(document.getElementById('x0').value);
+  var x1=parseFloat(document.getElementById('x1').value);
+  var tol=parseFloat(document.getElementById('tol').value);
+  if(!expr)return showError('Ingresa f(x).');
+  if(isNaN(x0)||isNaN(x1)||isNaN(tol))return showError('Completa todos los campos.');
+  var rows=[],iter=0,x2=x1,converged=false;
+  while(iter<100){
+    iter++;
+    var f0=evalF(expr,x0),f1=evalF(expr,x1);
+    if(Math.abs(f1-f0)<1e-14)return showError('f(x1)-f(x0)=0. Cambia los puntos.');
+    x2=x1-f1*(x1-x0)/(f1-f0);
+    var ea=Math.abs(x2-x1);
+    rows.push([iter,fmt(x0),fmt(x1),fmt(f0),fmt(f1),fmt(x2),fmt(ea)]);
+    x0=x1;x1=x2;
+    if(ea<tol){converged=true;break}
+  }
+  showSingleResult(x2,iter,converged,buildTable(['n','x0','x1','f(x0)','f(x1)','x2','|error|'],rows));
+}
+
+// ── RAICES: tabla -5 a 5, cada fila lanza su propia tabla Newton-Halley ──
+function doRaices(){
+  var expr  = document.getElementById('fx').value.trim();
+  var dexpr = document.getElementById('dfx').value.trim();
+  var d2expr= document.getElementById('d2fx').value.trim();
+  var tol   = parseFloat(document.getElementById('tol').value);
+  var maxIt = parseInt(document.getElementById('maxiter').value)||50;
+  if(!expr||!dexpr||!d2expr) return showError('Ingresa f(x), f\'(x) y f\'\'(x).');
+  if(isNaN(tol)) return showError('Completa todos los campos.');
+
+  // 1) Tabla de evaluacion -5 a 5
+  var puntos=[];
+  for(var xi=-5;xi<=5;xi++){
+    var fxi; try{fxi=evalF(expr,xi)}catch(e){fxi=NaN}
+    puntos.push({x:xi,fx:fxi});
+  }
+
+  // 2) Identificar cambios de signo → parejas (neg, pos) o (pos, neg)
+  var parejas=[];
+  for(var i=0;i<puntos.length-1;i++){
+    var p1=puntos[i],p2=puntos[i+1];
+    if(!isNaN(p1.fx)&&!isNaN(p2.fx)&&p1.fx*p2.fx<0)
+      parejas.push({xNeg:p1.fx<0?p1:p2, xPos:p1.fx>=0?p1:p2, a:p1, b:p2});
+  }
+
+  // Marcar filas con cambio de signo
+  var marcados={};
+  parejas.forEach(function(par){marcados[par.a.x]=true;marcados[par.b.x]=true;});
+
+  // HTML tabla evaluacion
+  var html='<div class="panel-title">Tabla de evaluacion f(x) en [-5, 5]</div>';
+  html+='<div class="table-wrap"><table><thead><tr><th>x</th><th>f(x)</th></tr></thead><tbody>';
+  puntos.forEach(function(p){
+    var cls=marcados[p.x]?' class="sign-change"':'';
+    html+='<tr'+cls+'><td>'+p.x+'</td><td>'+(isNaN(p.fx)?'N/A':fmt(p.fx))+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+
+  if(parejas.length===0){
+    html+='<div class="no-converge" style="margin-top:10px">No se encontraron cambios de signo en [-5,5].</div>';
+    document.getElementById('results-panel').innerHTML=html;
+    document.getElementById('results-section').style.display='block';
+    return;
+  }
+
+  html+='<div class="section-label">Parejas con cambio de signo detectadas: '+parejas.length+' (filas resaltadas)</div>';
+
+  // Resumen cards
+  var resultados=[];
+  html+='<div class="roots-grid">';
+  parejas.forEach(function(par,ii){
+    // Lanzar desde el valor negativo Y desde el positivo → 2 tablas por pareja
+    var resA=halleyInterno(expr,dexpr,d2expr,par.a.x,tol,maxIt);
+    var resB=halleyInterno(expr,dexpr,d2expr,par.b.x,tol,maxIt);
+    resultados.push({par:par,resA:resA,resB:resB,idx:ii+1});
+    html+='<div class="root-card"><div class="rv">x'+(ii+1)+' ≈ '+parseFloat(resA.xr.toFixed(4)).toFixed(4)+'</div>';
+    html+='<div class="ri">Pareja ['+par.a.x+', '+par.b.x+']</div></div>';
+  });
+  html+='</div>';
+
+  // Una tabla por cada punto de inicio (negativo luego positivo)
+  resultados.forEach(function(ri){
+    // Tabla desde el valor negativo
+    html+='<div class="section-label">Raiz '+ri.idx+' — iteraciones desde x0 = '+ri.par.a.x+' (f = '+fmt(ri.par.a.fx)+')</div>';
+    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f'(xi)","f''(xi)",'xr','T'],ri.resA.rows)+'</div>';
+    // Tabla desde el valor positivo
+    html+='<div class="section-label">Raiz '+ri.idx+' — iteraciones desde x0 = '+ri.par.b.x+' (f = '+fmt(ri.par.b.fx)+')</div>';
+    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f'(xi)","f''(xi)",'xr','T'],ri.resB.rows)+'</div>';
+  });
+
+  document.getElementById('results-panel').innerHTML=html;
+  document.getElementById('results-section').style.display='block';
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth'});
+}
+
+// Newton con segunda derivada (método de Halley / fórmula del Excel)
+// xr = xi - (f·f') / (f'² - f·f'')
+function halleyInterno(expr,dexpr,d2expr,x0,tol,maxIt){
+  var rows=[],iter=0,xr=x0,xrPrev=x0,converged=false;
+  var x=x0;
+  while(iter<maxIt){
+    iter++;
+    var fx,dfx,d2fx;
+    try{fx=evalF(expr,x);dfx=evalF(dexpr,x);d2fx=evalF(d2expr,x)}catch(e){break}
+    var denom=dfx*dfx - fx*d2fx;
+    if(Math.abs(denom)<1e-14)break;
+    xr=x-(fx*dfx)/denom;
+    var ea=iter>1?Math.abs(xr-xrPrev):'-';
+    rows.push([iter,fmt(x),fmt(fx),fmt(dfx),fmt(d2fx),fmt(xr),ea==='-'?'-':fmt(ea)]);
+    xrPrev=xr;
+    x=xr;
+    if(typeof ea==='number'&&ea<tol){converged=true;break}
+    if(!isFinite(xr))break;
+  }
+  return{xr:isFinite(xr)?xr:x0,rows:rows,converged:converged,iter:iter};
+}
+
+// MULLER: columnas i|x0|x1|x2|f(x0)|f(x1)|f(x2)|h0|h1|d0|d1|a|b|c|x3|error igual que Excel
+function doMuller(){
+  var expr=document.getElementById('fx').value.trim();
+  var x0=parseFloat(document.getElementById('x0').value);
+  var x1=parseFloat(document.getElementById('x1').value);
+  var x2=parseFloat(document.getElementById('x2').value);
+  var tol=parseFloat(document.getElementById('tol').value);
+  var maxIt=parseInt(document.getElementById('maxiter').value)||50;
+  if(!expr)return showError('Ingresa f(x).');
+  if(isNaN(x0)||isNaN(x1)||isNaN(x2)||isNaN(tol))return showError('Completa todos los campos.');
+  var rows=[],iter=0,x3=x2,converged=false;
+  while(iter<maxIt){
+    iter++;
+    var f0=evalF(expr,x0),f1=evalF(expr,x1),f2=evalF(expr,x2);
+    var h0=x1-x0, h1=x2-x1;
+    var d0=(f1-f0)/h0, d1=(f2-f1)/h1;
+    var a=(d1-d0)/(h1+h0);
+    var b=a*h1+d1;
+    var c=f2;
+    var disc=Math.sqrt(Math.max(0,b*b-4*a*c));
+    var denom=Math.abs(b+disc)>Math.abs(b-disc)?b+disc:b-disc;
+    if(Math.abs(denom)<1e-14)return showError('Denominador=0. Cambia los puntos.');
+    x3=x2+(-2*c)/denom;
+    // error = ((x3-x2)/x3)*100  como en el Excel
+    var error=fmt(Math.abs((x3-x2)/x3)*100)+'%';
+    rows.push([iter,fmt(x0),fmt(x1),fmt(x2),fmt(f0),fmt(f1),fmt(f2),fmt(h0),fmt(h1),fmt(d0),fmt(d1),fmt(a),fmt(b),fmt(c),fmt(x3),error]);
+    x0=x1; x1=x2; x2=x3;
+    if(Math.abs(x3-x2)<tol){converged=true;break}
+  }
+  showSingleResult(x3,iter,converged,buildTable(['i','x0','x1','x2','f(x0)','f(x1)','f(x2)','h0','h1','d0','d1','a','b','c','x3','error'],rows));
+}
+
+// ══════════ INTERPOLACION LINEAL ══════════
+function selectInterp(t){
+  document.getElementById('interp-lineal').style.display=t==='lineal'?'block':'none';
+  document.getElementById('interp-lagrange').style.display=t==='lagrange'?'block':'none';
+  document.getElementById('btn-lineal').classList.toggle('active',t==='lineal');
+  document.getElementById('btn-lagrange').classList.toggle('active',t==='lagrange');
+}
+
+function calcLineal(){
+  var raw=document.getElementById('lin-puntos').value.trim();
+  var xq =parseFloat(document.getElementById('lin-x').value);
+  var el =document.getElementById('lin-result');
+  el.innerHTML='';
+  if(!raw||isNaN(xq)){el.innerHTML='<div class="error">Completa todos los campos.</div>';return}
+
+  // Parsear puntos
+  var pts=[];
+  raw.split('\n').forEach(function(line){
+    line=line.trim();if(!line)return;
+    var parts=line.split(/[,\s]+/);
+    if(parts.length>=2){
+      var px=parseFloat(parts[0]),py=parseFloat(parts[1]);
+      if(!isNaN(px)&&!isNaN(py))pts.push({x:px,y:py});
+    }
+  });
+  if(pts.length<2){el.innerHTML='<div class="error">Necesitas al menos 2 puntos.</div>';return}
+  pts.sort(function(a,b){return a.x-b.x});
+
+  // Encontrar el par donde cae xq
+  var x0,y0,x1,y1,found=false;
+  for(var i=0;i<pts.length-1;i++){
+    if(xq>=pts[i].x&&xq<=pts[i+1].x){
+      x0=pts[i].x;y0=pts[i].y;x1=pts[i+1].x;y1=pts[i+1].y;found=true;break;
+    }
+  }
+  var extraMsg='';
+  if(!found){
+    if(xq<pts[0].x){x0=pts[0].x;y0=pts[0].y;x1=pts[1].x;y1=pts[1].y;}
+    else{x0=pts[pts.length-2].x;y0=pts[pts.length-2].y;x1=pts[pts.length-1].x;y1=pts[pts.length-1].y;}
+    extraMsg='<div class="error">Advertencia: x='+xq+' esta fuera del rango. Se aplica extrapolacion con el par mas cercano.</div>';
+  }
+
+  var y=y0+(y1-y0)*(xq-x0)/(x1-x0);
+
+  // Tabla de puntos con par resaltado
+  var ptRows=pts.map(function(p,i){
+    var esPar=(p.x===x0||p.x===x1);
+    var cls=esPar?' class="sign-change"':'';
+    return'<tr'+cls+'><td>'+(i+1)+'</td><td>'+fmt(p.x)+'</td><td>'+fmt(p.y)+'</td></tr>';
+  }).join('');
+  var ptTable='<table><thead><tr><th>i</th><th>x</th><th>y</th></tr></thead><tbody>'+ptRows+'</tbody></table>';
+
+  el.innerHTML=extraMsg+
+    '<div class="result-box" style="margin-top:12px">'+
+    '<div class="result-val">y = '+parseFloat(y.toFixed(4)).toFixed(4)+'</div>'+
+    '<div class="result-info">Interpolacion lineal en x = '+xq+'  |  Par usado: ['+x0+', '+x1+']</div></div>'+
+    '<div class="section-label">Puntos ingresados (par usado resaltado en verde)</div>'+
+    '<div class="table-wrap">'+ptTable+'</div>'+
+    '<div class="section-label">Formula aplicada</div>'+
+    '<div class="hint">y = y0 + (y1 - y0) * (x - x0) / (x1 - x0)\ny = '+fmt(y0)+' + ('+fmt(y1)+' - '+fmt(y0)+') * ('+xq+' - '+x0+') / ('+x1+' - '+x0+')\ny = '+parseFloat(y.toFixed(4)).toFixed(4)+'</div>'+
+    '<div class="section-label">Comprobacion</div>'+
+    '<div class="table-wrap">'+buildTable(['Campo','Valor'],[
+      ['x0 (izquierda)',fmt(x0)],['y0',fmt(y0)],
+      ['x1 (derecha)',fmt(x1)],['y1',fmt(y1)],
+      ['x buscado',fmt(xq)],['y interpolado',parseFloat(y.toFixed(4)).toFixed(4)]
+    ])+'</div>';
+}
+
+// ══════════ INTERPOLACION LAGRANGE ══════════
+function calcLagrange(){
+  var raw=document.getElementById('lag-puntos').value.trim();
+  var xq=parseFloat(document.getElementById('lag-x').value);
+  var el=document.getElementById('lag-result');
+  el.innerHTML='';
+  if(!raw||isNaN(xq)){el.innerHTML='<div class="error">Completa todos los campos.</div>';return}
+
+  // Parsear puntos
+  var pts=[];
+  raw.split('\n').forEach(function(line){
+    line=line.trim();
+    if(!line)return;
+    var parts=line.split(/[,\s]+/);
+    if(parts.length>=2){
+      var px=parseFloat(parts[0]),py=parseFloat(parts[1]);
+      if(!isNaN(px)&&!isNaN(py))pts.push({x:px,y:py});
+    }
+  });
+  if(pts.length<2){el.innerHTML='<div class="error">Necesitas al menos 2 puntos.</div>';return}
+
+  // Calcular Lagrange
+  var n=pts.length;
+  var result=0;
+  var terminos=[];
+  for(var i=0;i<n;i++){
+    var Li=1,num='',den='';
+    for(var j=0;j<n;j++){
+      if(j!==i){
+        Li*=(xq-pts[j].x)/(pts[i].x-pts[j].x);
+        num+=(j>0&&j!==i?'·':'')+'('+xq+(pts[j].x>=0?'-':'+')+(Math.abs(pts[j].x))+')';
+        den+=(j>0&&j!==i?'·':'')+'('+pts[i].x+(pts[j].x>=0?'-':'+')+(Math.abs(pts[j].x))+')';
+      }
+    }
+    var contrib=Li*pts[i].y;
+    result+=contrib;
+    terminos.push([i+1,'L'+i+'(x)',parseFloat(Li.toFixed(4)).toFixed(4),fmt(pts[i].y),parseFloat(contrib.toFixed(4)).toFixed(4)]);
+  }
+
+  // Tabla de puntos
+  var ptRows=pts.map(function(p,i){return[i,fmt(p.x),fmt(p.y)]});
+  var termRows=terminos;
+
+  el.innerHTML=
+    '<div class="result-box" style="margin-top:12px">'+
+    '<div class="result-val">y = '+parseFloat(result.toFixed(4)).toFixed(4)+'</div>'+
+    '<div class="result-info">Lagrange en x = '+xq+'  con '+n+' puntos</div></div>'+
+    '<div class="section-label">Puntos de interpolacion</div>'+
+    '<div class="table-wrap">'+buildTable(['i','xi','yi'],ptRows)+'</div>'+
+    '<div class="section-label">Terminos L_i(x) calculados</div>'+
+    '<div class="table-wrap">'+buildTable(['i','termino','Li(x)','yi','Li·yi'],termRows)+'</div>'+
+    '<div class="hint">Resultado: y('+xq+') = '+terminos.map(function(t){return t[4]}).join(' + ')+'\n         = '+parseFloat(result.toFixed(4)).toFixed(4)+'</div>';
+}
+
+// ══════════ GRAFICADOR ══════════
+var myChart=null;
+window.chartInited=false;
+
+function initChart(){
+  var ctx=document.getElementById('myChart').getContext('2d');
+  myChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:[],datasets:[]},
+    options:{
+      responsive:true,
+      animation:{duration:400},
+      plugins:{legend:{labels:{color:'#a89cf7',font:{family:'Courier New',size:11}}}},
+      scales:{
+        x:{ticks:{color:'#666',maxTicksLimit:12},grid:{color:'#1e1e38'},title:{display:true,text:'x',color:'#888'}},
+        y:{ticks:{color:'#666'},grid:{color:'#1e1e38'},title:{display:true,text:'f(x)',color:'#888'}}
+      }
+    }
+  });
+  window.chartInited=true;
+}
+
+function graficar(){
+  var f1=document.getElementById('g-f1').value.trim();
+  var f2=document.getElementById('g-f2').value.trim();
+  var f3=document.getElementById('g-f3').value.trim();
+  var xmin=parseFloat(document.getElementById('g-xmin').value);
+  var xmax=parseFloat(document.getElementById('g-xmax').value);
+  var ymin=parseFloat(document.getElementById('g-ymin').value);
+  var ymax=parseFloat(document.getElementById('g-ymax').value);
+  var gel=document.getElementById('g-error');
+  gel.innerHTML='';
+  if(!f1){gel.innerHTML='<div class="error">Ingresa al menos f1(x).</div>';return}
+  if(isNaN(xmin)||isNaN(xmax)){gel.innerHTML='<div class="error">Ingresa limites x validos.</div>';return}
+  if(!window.chartInited)initChart();
+
+  var N=300;
+  var step=(xmax-xmin)/N;
+  var labels=[];
+  for(var i=0;i<=N;i++)labels.push(parseFloat((xmin+i*step).toFixed(4)));
+
+  var colors=['#a89cf7','#f09595','#97c459'];
+  var funciones=[[f1,'f1(x)'],[f2,'f2(x)'],[f3,'f3(x)']];
+  var datasets=[];
+
+  funciones.forEach(function(pair,idx){
+    var expr=pair[0],name=pair[1];
+    if(!expr)return;
+    var data=labels.map(function(xv){
+      try{var v=math.evaluate(expr,{x:xv});return(isFinite(v)&&v>=ymin-50&&v<=ymax+50)?v:null}catch(e){return null}
+    });
+    datasets.push({label:name+': '+expr,data:data,borderColor:colors[idx],backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.1,spanGaps:false});
+  });
+
+  myChart.data.labels=labels;
+  myChart.data.datasets=datasets;
+  myChart.options.scales.y.min=ymin;
+  myChart.options.scales.y.max=ymax;
+  myChart.update();
+}
+
+// Init
+selectMethod('biseccion');
+selectInterp('lineal');
+</script>
+</body>
+</html>
