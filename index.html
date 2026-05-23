@@ -340,7 +340,7 @@ function doBiseccion(){
     if(ea<tol||Math.abs(fxr)<1e-10){converged=true;break}
     if(evalF(expr,a)*fxr<0)b=xr;else a=xr;
   }
-  showSingleResult(xr,iter,converged,buildTable(['n','a','b','xr=(a+b)/2','f(xr)','|(b-a)/2|'],rows));
+  showSingleResult(xr,iter,converged,buildTable(['I','a','b','xi','f(xi)','T'],rows));
 }
 
 // REGLA FALSA: columnas i|A|B|F(A)|F(B)|Xi|F(Xi)|T igual que Excel
@@ -370,7 +370,7 @@ function doReglaFalsa(){
     if(fA*fXi<0) B=Xi; else A=Xi;
     XiPrev=Xi;
   }
-  showSingleResult(Xi,iter,converged,buildTable(['i','A','B','F(A)','F(B)','Xi','F(Xi)','T'],rows));
+  showSingleResult(Xi,iter,converged,buildTable(['I','a','b','f(a)','f(b)','xi','f(xi)','T'],rows));
 }
 
 // ── NEWTON ──
@@ -392,7 +392,7 @@ function doNewton(){
     x=xNew;
     if(ea<tol){converged=true;break}
   }
-  showSingleResult(x,iter,converged,buildTable(['n','xn','f(xn)',"f'(xn)",'xn+1','|error|'],rows));
+  showSingleResult(x,iter,converged,buildTable(['i','xi','f(xi)',"f’(xi)",'xr','T'],rows));
 }
 
 // ── SECANTE ──
@@ -414,7 +414,7 @@ function doSecante(){
     x0=x1;x1=x2;
     if(ea<tol){converged=true;break}
   }
-  showSingleResult(x2,iter,converged,buildTable(['n','x0','x1','f(x0)','f(x1)','x2','|error|'],rows));
+  showSingleResult(x2,iter,converged,buildTable(['i','xi1','xi','F(xi1)','f(xi)','Xr','T'],rows));
 }
 
 // ── RAICES: tabla -5 a 5, cada fila lanza su propia tabla Newton-Halley ──
@@ -481,10 +481,10 @@ function doRaices(){
   resultados.forEach(function(ri){
     // Tabla desde el valor negativo
     html+='<div class="section-label">Raiz '+ri.idx+' — iteraciones desde x0 = '+ri.par.a.x+' (f = '+fmt(ri.par.a.fx)+')</div>';
-    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f'(xi)","f''(xi)",'xr','T'],ri.resA.rows)+'</div>';
+    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f’(xi)","f’’(xi)",'xr','T'],ri.resA.rows)+'</div>';
     // Tabla desde el valor positivo
     html+='<div class="section-label">Raiz '+ri.idx+' — iteraciones desde x0 = '+ri.par.b.x+' (f = '+fmt(ri.par.b.fx)+')</div>';
-    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f'(xi)","f''(xi)",'xr','T'],ri.resB.rows)+'</div>';
+    html+='<div class="table-wrap">'+buildTable(['i','xi','f(xi)',"f’(xi)","f’’(xi)",'xr','T'],ri.resB.rows)+'</div>';
   });
 
   document.getElementById('results-panel').innerHTML=html;
@@ -543,7 +543,7 @@ function doMuller(){
     x0=x1; x1=x2; x2=x3;
     if(Math.abs(x3-x2)<tol){converged=true;break}
   }
-  showSingleResult(x3,iter,converged,buildTable(['i','x0','x1','x2','f(x0)','f(x1)','f(x2)','h0','h1','d0','d1','a','b','c','x3','error'],rows));
+  showSingleResult(x3,iter,converged,buildTable(['I','X0','X1','X2','F(X0)','F(X1)','F(X2)','H0','H1','D0','D1','A','B','C','X3','ERROR'],rows));
 }
 
 // ══════════ INTERPOLACION LINEAL ══════════
